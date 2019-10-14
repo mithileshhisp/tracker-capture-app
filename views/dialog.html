@@ -1,0 +1,16 @@
+<div class="modal-header">
+    <h2>{{dialogOptions.headerText | translate}}</h2>
+</div>
+<div class="modal-body">
+    <modal-body body="dialogOptions"></modal-body>
+    <div ng-repeat="section in dialogOptions.sections">
+        <modal-body body="section"></modal-body>
+    </div>
+    <div ng-if="summaries">
+        <h5>{{'reponse_from_server' | translate}}</h5>
+        <pre>{{summaries}}</pre>
+    </div>
+</div>
+<div class="modal-footer">
+    <button class="btn btn-default" data-ng-click="dialogOptions.ok();">{{dialogOptions.closeButtonText | translate}}</button>
+</div>

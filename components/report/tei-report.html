@@ -1,0 +1,32 @@
+<div class="panel panel-default-custom" ng-controller="TeiReportController">
+    <div class="panel-heading handle bold hideInPrint">
+        {{reportWidget.title| translate}}        
+        <span class="pull-right widget-link">
+            <a class="small-horizontal-spacing" href ng-click="expandCollapse(reportWidget)">
+                <span ng-show="reportWidget.expand"><i class="fa fa-chevron-up" title="{{collapseLabel}}"></i></span>
+                <span ng-show="!reportWidget.expand"><i class="fa fa-chevron-down" title="{{expandLabel}}"></i></span>
+            </a>
+            <a ng-show="userAuthority.canAdministerDashboard || !lockedList[selectedProgram.id]" class="small-horizontal-spacing" href ng-click="removeWidget(reportWidget)" title="{{removeLabel}}"><i class="fa fa-times-circle"></i></a>            
+        </span>        
+    </div>
+    <div ng-show="reportWidget.expand" class="panel-body dashboard-widget-container">
+        <div>
+            <div ng-if="!dataExists" class="alert alert-warning">{{noDataReportLabel}}</div>
+            <div ng-if="dataExists" class="remove-default-padding hideInPrint">
+                <div ng-repeat="pr in programs" ng-if="report[pr.id].enrollments">
+                    <table class="table table-striped dhis2-table-hover">
+                        <tr ng-click="toggleProgramReportDetails(pr)" title="{{'details'| translate}}">                   
+                            <td>
+                                {{pr.displayName}}                        
+                            </td>
+                        </tr>
+                    </table>
+                    <div ng-if="showProgramReportDetailsDiv[pr.id]">     
+                        <div ng-class="printable" ng-include="'components/report/program-details.html'"></div>             
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+</div>

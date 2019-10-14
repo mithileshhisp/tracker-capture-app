@@ -1,0 +1,113 @@
+<div class="section-label vertical-spacing">
+    {{'enrollment'| translate}}
+</div>
+<table class="dhis2-list-table-striped default-form-table" ng-init="initiateNepaliCalendar();">
+    <tr>
+        <td>
+            {{'enrolling_orgunit' | translate}}
+        </td>
+        <td class="absorbing-column">
+            <input type="text" class="form-control" ng-attr-value={{selectedEnrollment.orgUnitName}} ng-disabled="true"/>
+        </td>
+    </tr>
+    <tr ng-if="selectedProgram.featureType && ['POLYGON','POINT'].includes(selectedProgram.featureType)">
+        <td>
+            {{ 'enrollment_'+selectedProgram.featureType.toLowerCase() | translate}}
+        </td>
+        <td class="absorbing-column">
+            <d2-geometry
+                d2-object-id="geometry"
+                d2-object="selectedEnrollment"
+                d2-disabled="selectedOrgUnit.closedStatus"
+                d2-geometry-type="selectedProgram.featureType"
+                >
+            </d2-geometry>
+        </td>
+    </tr>
+    <tr>
+        <td ng-if="!selectedProgramForRelative">
+            {{selectedProgram.enrollmentDateLabel ? selectedProgram.enrollmentDateLabel : ('enrollment_date' | translate)}}
+        </td>
+        <td ng-if="selectedProgramForRelative">
+            {{selectedProgramForRelative.enrollmentDateLabel ? selectedProgramForRelative.enrollmentDateLabel : ('enrollment_date' | translate)}}
+        </td>
+        <td class="absorbing-column">
+            <input type="text"
+                   id="updatedISODate"
+                   ng-attr-placeholder="{{dhis2CalendarFormat.keyDateFormat}}" 
+                   name="enrollmentDate" 
+                   class="form-control hideInPrint" 
+                   d2-date 
+                   ng-model="selectedEnrollment.enrollmentDate"
+                   min-date="model.minEnrollmentDate"
+                   max-date="selectedProgram.selectEnrollmentDatesInFuture ? '' : 0"
+                   ng-change="verifyExpiryDate('selectedEnrollment.enrollmentDate')"
+                   ng-disabled="selectedOrgUnit.closedStatus"
+                   ng-required="true"/>
+            <input type="text" ng-attr-value={{selectedEnrollment.enrollmentDate}} class="form-control not-for-screen"/>
+            <span ng-show="outerForm.submitted && outerForm.enrollmentDate.$invalid" class="error">{{'required'| translate}}</span>
+        </td>
+    </tr>
+    <tr ng-if="selectedProgram.displayIncidentDate && !selectedProgramForRelative">
+        <td>
+            {{selectedProgram.incidentDateLabel ? selectedProgram.incidentDateLabel : ('incident_date' | translate)}}
+        </td>
+        <td class="absorbing-column">
+            <input type="text"
+                ng-attr-placeholder="{{dhis2CalendarFormat.keyDateFormat}}"
+                name="incidentDate"
+                class="form-control hideInPrint" 
+                d2-date 
+                max-date="selectedProgram.selectIncidentDatesInFuture ? '' : 0"
+                min-date=""
+                ng-model="selectedEnrollment.incidentDate"
+                ng-disabled="selectedOrgUnit.closedStatus"
+                ng-change="verifyExpiryDate('selectedEnrollment.incidentDate')"/>
+            <input type="text" ng-attr-value={{selectedEnrollment.incidentDate}} class="form-control not-for-screen"/>
+        </td>
+    </tr>
+    <tr ng-if="selectedProgram.captureCoordinates && !selectedProgramForRelative">
+        <td>
+            {{'coordinate'| translate}}
+        </td>
+        <td>         
+            <d2-map d2-object="selectedEnrollment" d2-coordinate-format="'COORDINATE'" d2-disabled="selectedOrgUnit.closedStatus"></d2-map>
+        </td>                                            
+    </tr>
+    <tr ng-if="selectedProgramForRelative.displayIncidentDate && selectedProgramForRelative">
+        <td>
+            {{selectedProgramForRelative.incidentDateLabel ? selectedProgramForRelative.incidentDateLabel : ('incident_date' | translate)}}
+        </td>
+        <td class="absorbing-column">
+            <input type="text"
+                ng-attr-placeholder="{{dhis2CalendarFormat.keyDateFormat}}"
+                name="incidentDate"
+                class="form-control hideInPrint" 
+                d2-date 
+                max-date="selectedProgramForRelative.selectIncidentDatesInFuture ? '' : 0"
+                min-date=""
+                ng-model="selectedEnrollment.incidentDate"
+                ng-disabled="selectedOrgUnit.closedStatus"
+                ng-change="verifyExpiryDate('selectedEnrollment.incidentDate')"/>
+            <input type="text" ng-attr-value={{selectedEnrollment.incidentDate}} class="form-control not-for-screen"/>
+        </td>
+    </tr>
+    <tr ng-if="selectedProgramForRelative.captureCoordinates && selectedProgramForRelative">
+        <td>
+            {{'coordinate'| translate}}
+        </td>
+        <td>         
+            <d2-map d2-object="selectedEnrollment" d2-coordinate-format="'COORDINATE'" d2-disabled="selectedOrgUnit.closedStatus"></d2-map>
+        </td>                                            
+    </tr>
+    <!-- add for nepali Calendar -->
+    <tr>
+        <td>
+            Nepali Calendar
+        </td>
+        <td>
+            <input type="text" class="form-control hideInPrint" name="nepali-date-picker"  id="nepali-date-picker">
+        </td>
+    </tr>
+
+</table>

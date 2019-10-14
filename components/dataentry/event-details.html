@@ -1,0 +1,128 @@
+<!-- event dates/scheduling begin -->
+
+<div class="row" ng-if="displayCustomForm !== 'TABLE' && displayCustomForm !== 'COMPARE'" ng-init="initiateNepaliEventCalendar();">
+    <!-- add for nepali Calendar start -->
+    <div class="col-md-3">
+        <span><b>Nepali Calendar</b></span>
+        <input type="text" class="form-control hideInPrint" ng-model="convertedNepaliDate" name="nepaliEventDatePicker" id="nepaliEventDatePicker" />
+    </div>
+    <!-- add for nepali Calendar end-->
+    <div ng-class="{true: 'col-md-12', false: 'col-md-6'} [currentStage.hideDueDate || currentStage.periodType !== undefined]">
+        {{currentStage.executionDateLabel ? currentStage.executionDateLabel : 'report_date' | translate}}
+        <span class="required">*</span>
+        <input type="text"
+               ng-attr-placeholder="{{dhis2CalendarFormat.keyDateFormat}}"
+               class="form-control hideInPrint"
+               ng-class="{'input-success': eventDateSaved}"
+               d2-date-validator
+               d2-date
+               max-date="model.maxDate?model.maxDate : '0'"
+               min-date="model.minDate?model.minDate : ''"
+               picker-class="hide-clear"
+               name="eventDate"
+               ng-model="currentEvent.eventDate"
+               ng-change="verifyEventExpiryDate('eventDate')"
+               ng-disabled="!reportDateEditable()"
+               ng-required="true"
+               blur-or-change="saveEventDate()"
+               ng-focus="setDateOnFocus(currentEvent.eventDate, selectedEnrollment.enrollmentDate)"/>
+        <input type="text"
+               class="form-control not-for-screen"
+               ng-class="{'input-success': eventDateSaved}"
+               ng-attr-value={{currentEvent.eventDate}}>
+        <div ng-messages="outerDataEntryForm.eventDate.$error" ng-if="interacted(outerDataEntryForm.eventDate)" class="required" ng-messages-include="../dhis-web-commons/angular-forms/error-messages.html">
+        </div>
+    </div>
+
+
+
+    <div ng-if="!currentStage.hideDueDate && !registrationAndDataEntry && !currentStage.periodType"  class="col-md-3">
+        <span ng-if="currentEvent.eventDate || currentEvent.status === 'SKIPPED' || currentEvent.dueDate || registrationMode === 'REGISTRATION'">
+            {{currentStage.dueDateLabel ? currentStage.dueDateLabel : 'due_date' | translate}}
+        </span>
+        <span ng-if="!currentEvent.eventDate && currentEvent.status !== 'SKIPPED' && !selectedEntity.inactive && selectedEnrollment.status === 'ACTIVE' && registrationMode !== 'REGISTRATION'">
+            <a href ng-click="enableRescheduling()" ng-attr-title="{{ schedulingEnabled ? 'disable_rescheduling' : 'enable_rescheduling' | translate}}"><span class="text-primary bold">{{'reschedule_duedate'| translate}}</span></a>
+        </span>
+        <input type="text"
+               ng-attr-placeholder="{{dhis2CalendarFormat.keyDateFormat}}"
+               class="form-control hideInPrint"
+               ng-class="{'input-success': dueDateSaved}"
+               d2-date-validator
+               d2-date
+               name="dueDate"
+               min-date="model.minDate?model.maxDate : ''"
+               ng-model="currentEvent.dueDate"
+               ng-change="verifyEventExpiryDate('dueDate')"
+               blur-or-change="saveDueDate()"
+               ng-disabled="!eventEditable() || currentEvent.eventDate || !schedulingEnabled"/>
+        <input type="text"
+               class="form-control not-for-screen"
+               ng-class="{'input-success': dueDateSaved}"
+               ng-attr-value={{currentEvent.dueDate}}>        
+        <div ng-messages="outerDataEntryForm.dueDate.$error" ng-if="interacted(outerDataEntryForm.dueDate)" class="required" ng-messages-include="../dhis-web-commons/angular-forms/error-messages.html">                        
+        </div>
+    </div>    
+</div>
+<!-- event dates/scheduling end -->
+<!-- coordinates begin -->
+<div class="row" ng-if="currentStage.featureType && ['POLYGON','POINT'].includes(currentStage.featureType) && (currentEvent.eventDate || registrationMode ==='REGISTRATION')">
+    <div class="col-sm-12">
+        {{'event_'+currentStage.featureType.toLowerCase() | translate}}
+        <d2-geometry
+                d2-object-id="geometry"
+                d2-object="currentEvent"
+                d2-callback-function="saveGeometry()"
+                d2-disabled="selectedOrgUnit.closedStatus || currentEvent.editingNotAllowed || selectedEnrollment.status !== 'ACTIVE'"
+                d2-geometry-type="currentStage.featureType"
+                >
+        </d2-geometry>
+    </div>   
+</div>
+<!-- coordinates end -->
+
+<div class="row" ng-if="currentStage.enableUserAssignment">
+    <div class="col-sm-12">
+        {{'assigned_user' | translate}}
+        <d2-assign-users-input d2-model="currentEvent"
+                        d2-disabled="!eventEditable()"
+                        d2-save-method="saveAssignedUser"
+                        d2-saved="assignedUserSaved">
+        </d2-assign-users-input>
+    </div>
+</div>
+
+<!-- attribute category options begin -->
+<div class="row" ng-if="selectedProgram.categoryCombo && !selectedProgram.categoryCombo.isDefault && currentEvent && currentEvent.attributeCategoryOptions && currentEvent.attributeOptionCombo">
+    <div class="col-sm-12">
+        
+        <a href 
+           ng-click="editAttributeCategoryOptions()" 
+           ng-attr-title="{{'edit' | translate}}">
+            {{selectedProgram.categoryCombo.displayName}}  <i class="fa fa-pencil-square-o"></i>
+        </a>        
+        
+        <div ng-if="showAttributeCategoryOptions">
+            <table class="table table-striped table-bordered">
+                <tr ng-repeat="category in selectedProgram.categoryCombo.categories">
+                    <td>
+                        {{category.displayName}}
+                    </td>
+                    <td>
+                        <ui-select ng-model="category.selectedOption"
+                                theme="select2"
+                                name="foo"
+                                on-select="saveAttributeCategoryOptions()"
+                                style="width: 100%">
+                            <ui-select-match allow-clear="false" ng-class="getOptionSaveNotifcationClass(category.id)"  class="form-control-ui-select"  ng-attr-placeholder="{{'select_or_search' | translate}}">{{$select.selected.displayName  || $select.selected}}</ui-select-match>
+                            <ui-select-choices  repeat="option in category.categoryOptions | filter:{displayName:$select.search} | limitTo:maxOptionSize">
+                              <span ng-bind-html="option.displayName | highlight: $select.search"></span>
+                            </ui-select-choices>
+                        </ui-select>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>    
+    
+</div>
+<!-- attribute category options end -->

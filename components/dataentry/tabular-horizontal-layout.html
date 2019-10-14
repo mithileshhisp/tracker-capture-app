@@ -1,0 +1,34 @@
+<table class="table table-bordered table-horizontal-layout" ng-if="eventsByStage[currentStage.id].length > 0">
+    <thead ng-if="eventsByStage[currentStage.id].length > 1">
+        <tr>
+            <th ng-repeat="col in eventGridColumns.partial">
+                {{col.name}}
+            </th>
+        </tr>
+    </thead>
+    <tbody ng-repeat="dhis2Event in eventsByStage[currentStage.id] track by $index">
+        <tr ng-click="showDataEntry(dhis2Event, false, false)" ng-if="eventsByStage[currentStage.id].length > 1">
+            <td ng-class="getEventStyle(dhis2Event)" class="cursor-pointer" ng-repeat="col in eventGridColumns.partial">
+                <span ng-switch="col.valueType">
+                    <span ng-switch-when="BOOLEAN">
+                        <span ng-if="dhis2Event[col.id] === 'true'">{{'yes'| translate}}</span>
+                        <span ng-if="dhis2Event[col.id] === 'false'">{{ 'no' | translate}}</span>
+                    </span>
+                    <span ng-switch-when="TRUE_ONLY">
+                        <span ng-if="dhis2Event[col.id]">
+                            <i class="fa fa-check"></i>
+                        </span>
+                    </span>
+                    <span ng-switch-default>{{dhis2Event[col.id]}}</span>
+                </span>
+            </td>
+        </tr>
+        <tr ng-if="currentEvent && currentEvent.programStage === currentStage.id && dhis2Event.event === currentEvent.event">
+            <td colspan="{{eventGridColumns.partial.length}}" class="cursor-pointer">
+                <div class="row">
+                    <div class="col-sm-12" ng-include="'components/dataentry/main-dataentry-form.html'" ng-style="{'width' : calcTableWidth()}"></div>
+                </div>
+            </td>
+        </tr>        
+    </tbody>
+</table>

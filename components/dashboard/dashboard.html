@@ -1,0 +1,129 @@
+<script type="text/ng-template" id="program-selector">
+    <div>
+        <button ng-disabled="!previousTeiExists" type="button"
+        class="btn btn-default small-horizontal-spacing" ng-click="fetchTei('PREV')"
+        ng-attr-title="{{'previous'| translate}}" style="margin-bottom:3px"><i class="fa fa-caret-left"></i></button>
+
+        <button ng-disabled="!nextTeiExists" type="button" class="btn btn-default small-horizontal-spacing"
+                ng-click="fetchTei('NEXT')" ng-attr-title="{{'next'| translate}}" style="margin-bottom:3px"><i class="fa fa-caret-right"></i>
+        </button>
+        <ui-select ng-model="selectedProgram"
+                   theme="select2"
+                   ng-disabled="programs.length < 1"
+                   on-select="applySelectedProgram(selectedProgram)"
+                   style="margin-top:0px;margin-bottom:3px;width:50%">
+            <ui-select-match allow-clear="true"
+                             class="form-control-ui-select program-select"
+                             ng-attr-placeholder="{{'select_or_search' | translate}}">
+                <img class="icon-program-left" ng-style="{'background-color': ($select.selected.style.color ? $select.selected.style.color : '#E0E0E0')}" ng-src="{{APIURL}}/icons/{{$select.selected.style.icon ? $select.selected.style.icon : 'clinical_fe_outline'}}/icon.svg"/>{{$select.selected.displayName  || $select.selected}}
+            </ui-select-match>
+            <ui-select-choices  repeat="program in programs | filter:{displayName:$select.search} | limitTo:maxOptionSize">
+                <span><img class="icon-program-left" ng-style="{'background-color': (program.style.color ? program.style.color : '#E0E0E0')}" ng-src="{{APIURL}}/icons/{{program.style.icon ? program.style.icon : 'clinical_fe_outline'}}/icon.svg"/><span ng-bind-html="program.displayName | highlight: $select.search"></span></span>
+            </ui-select-choices>
+        </ui-select>
+    </div>
+</script>
+<div class="audit-overlay" style="position: fixed;background-color: white;width:100%;height: 100%;" ng-hide="hasAccess">
+</div>
+
+<div class="container-1-1" ng-show="hasAccess">
+
+    <!-- dashboard widgets begin -->
+    <div class="col-sm-12" ng-if="metaDataCached" ng-show="hasAccess">
+        <div class="row" ng-class="{'dashboard-top-bar-sticky' : topBarConfig.settings && topBarConfig.settings.active}" height-change-source>
+            <div style="display:flex;margin-left:15px;" class="vertical-spacing">
+                <div><button type="button" class="btn btn-default remove-focus-effects" ng-click="back()">
+                        {{getBackButtonText()}}
+                    </button>
+                </div>
+                
+                <div ng-include="'program-selector'" ng-if="!topBarConfig.settings || !topBarConfig.settings.active" style="flex: 1 100%;"></div>
+                <div ng-include="'components/topbar/topbar.html'" ng-style="{'flex' : (topBarConfig.settings && topBarConfig.settings.active) ? '1 100%' : '0'}"></div>
+                <div ng-class="topbarRightSizeClass" style="width:150px; display:flex;">
+                    <button type="button"
+                            ng-attr-title="{{model.stickyDisabled ? stickLabel : unstickLabel}}"
+                            ng-show="(dashboardWidgets | filter: {parent: 'smallerWidget', show: true}).length > 0"
+                            class="btn btn-default dashboard-info-btn-right-size"
+                            ng-class="{true: 'stick', false: 'unstick'} [!model.stickyDisabled]"
+                            ng-click="model.stickyDisabled = !model.stickyDisabled"
+                            style="height: 35px;">
+                        <i class="fa fa-thumb-tack"></i>
+                    </button>
+                    
+                    <div class="btn-group trim" ng-if="showManageTeiDropdown()">
+                        <button type="button" ng-attr-title="{{'manage' | translate}} {{trackedEntityType.displayName}}" class="btn btn-danger dropdown-toggle" ng-disabled="selectedOrgUnit.closedStatus" data-toggle="dropdown" style="height: 35px;">
+                            <i class="fa fa-exclamation-circle"></i>
+                        </button>
+                        <ul class="dropdown-menu pull-right" role="menu">                            
+                            <li><a href ng-click="activiateTEI()">{{selectedTei.inactive ? 'activate' : 'deactivate' | translate}} {{trackedEntityType.displayName}}</a></li>
+                            <li><a href ng-click="deleteTEI()">{{'delete' | translate}} {{trackedEntityType.displayName}}</a></li>
+                        </ul>
+                    </div>
+                    
+                    <div class="btn-group trim">
+                        <button type="button" ng-attr-title="{{settingsLabel}}" class="btn btn-default dropdown-toggle" data-toggle="dropdown" style="height: 35px;">
+                            <i class="fa fa-cog"></i>
+                        </button>
+                        <ul class="dropdown-menu pull-right" role="menu">
+                            <li><a href ng-click="showHideWidgets()">{{showHideWidgetsLabel}}</a></li>
+                            <li ng-if="userAuthority.canAdministerDashboard"><a href ng-click="saveDashboarLayoutAsDefault()">{{'save_layout_as_default' | translate}}</a></li>
+                            <li><a href ng-click="openTopBarSettings()">Top bar settings</a></li>
+                            <li ng-if="userAuthority.canAdministerDashboard && lockedList && !lockedList[selectedProgram.id]"><a href ng-click="toggleLockDashboard()"><i class="fa fa-lock" aria-hidden="true"></i> {{'lock_default_layout' | translate}}</a></li>
+                            <li ng-if="userAuthority.canAdministerDashboard && lockedList && lockedList[selectedProgram.id]"><a href ng-click="toggleLockDashboard()"><i class="fa fa-unlock" aria-hidden="true"></i> {{'unlock_default_layout' | translate}}</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            
+        </div>
+        <div class="row">
+            <div height-change-target class="vertical-spacing" ng-show="topBarConfig.settings && topBarConfig.settings.active" style="margin-bottom:0px;"></div>
+            <div ng-if="topBarConfig.settings && topBarConfig.settings.active" ng-include="'program-selector'" style="margin-left:12px;"></div>
+            <!-- dashboard bigger widgets begin -->
+            <div ng-class="widgetSize.bigger">
+
+                <div id="biggerWidget" class="row connectedSortable empty-dashboard-container" d2-sortable
+                     bigger-widgets={{dashboardWidgets | filter: {parent:
+                'biggerWidget'}}} smaller-widgets={{ dashboardWidgets | filter: {parent: 'smallerWidget'}}}>
+                <div class="col-sm-12 remove-one-pix" id={{biggerWidget.title}}
+                     ng-repeat="biggerWidget in dashboardWidgets | orderBy:'order' | filter: {parent: 'biggerWidget'}">
+                    <div ng-show="(!biggerWidget.useAsTopBar && biggerWidget.show && !temporaryHideWidgets[biggerWidget.title]) || temporaryShowWidgets[biggerWidget.title]"
+                         ng-include="biggerWidget.view"
+                         ng-class="{true: 'hideInPrint'} [biggerWidget.title != 'report']">
+					</div>
+                </div>
+            </div>
+        </div>
+        <!-- dashboard bigger widgets end -->
+
+        <!-- dashboard smaller widgets begin -->
+        <div ng-class="[!model.stickyDisabled ? 'widgets-sticky' : '', widgetSize.smaller]">
+            <div id="smallerWidget" class="row connectedSortable empty-dashboard-container" d2-sortable
+                 bigger-widgets={{dashboardWidgets | filter: {parent:
+            'biggerWidget'}}} smaller-widgets={{dashboardWidgets | filter: {parent: 'smallerWidget'}}}>
+            <div class="col-sm-12 remove-one-pix" id={{smallerWidget.title}}
+                 ng-repeat="smallerWidget in dashboardWidgets  | orderBy:'order' | filter: {parent: 'smallerWidget'}">
+                <div ng-show="(!smallerWidget.useAsTopBar && smallerWidget.show && !temporaryHideWidgets[smallerWidget.title]) || temporaryShowWidgets[smallerWidget.title]"
+                     ng-include="smallerWidget.view"
+                     ng-class="{true: 'hideInPrint'} [smallerWidget.title != 'report']"></div>
+            </div>
+        </div>
+        <!-- dashboard smaller widgets end -->
+
+
+    </div>
+    </div>
+    </div>
+
+    <!-- dashboard widgets end -->
+
+
+    <div class="col-sm-12" ng-if="!metaDataCached">
+        <img src="../images/ajax-loader-bar.gif" alt="{{'in_progress'| translate}}"/><br>
+            {{'loading_metadata'| translate}}
+    </div>
+
+</div>
+

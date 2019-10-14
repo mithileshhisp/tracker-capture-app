@@ -1,0 +1,99 @@
+<div class="panel panel-default-custom" ng-controller="DataEntryController">    
+    <div class="panel-heading handle bold">        
+        <div ng-include="'components/dataentry/dataentry-print.html'"></div>
+        <div ng-if="useMainMenu && !mainMenuStageSelected()">
+            {{'main_menu' | translate}}
+            
+            <span class="pull-right widget-link">
+                <a href ng-click="model.showLegend = !model.showLegend" ng-attr-title="{{'event_color_legend'| translate}}" class="small-horizontal-spacing" ng-if="allEventsSorted.length > 0"><i class="fa fa-info-circle vertical-center"></i></a>
+                <a class="small-horizontal-spacing" href ng-click="expandCollapse(dataentryWidget)">
+                    <span ng-show="dataentryWidget.expand"><i class="fa fa-chevron-up vertical-center" ng-attr-title="{{collapseLabel}}"></i></span>
+                    <span ng-show="!dataentryWidget.expand"><i class="fa fa-chevron-down vertical-center" ng-attr-title="{{expandLabel}}"></i></span>
+                </a>            
+            </span>
+            
+        </div>
+        <div ng-if="!useMainMenu">
+            {{dataentryWidget.title | translate}}
+            <span class="pull-right widget-link">               
+                <a href ng-click="model.showEventSearch = !model.showEventSearch" ng-attr-title="{{'search'| translate}}" ng-if="allEventsSorted.length > eventPageSize" class="small-horizontal-spacing"><span ng-class="{true: 'red'} [model.eventSearchText.length > 0]"><i class="fa fa-search vertical-center"></i></span></a>
+                <a href ng-click="model.showLegend = !model.showLegend" ng-attr-title="{{'event_color_legend'| translate}}" class="small-horizontal-spacing" ng-if="allEventsSorted.length > 0"><i class="fa fa-info-circle vertical-center"></i></a>
+
+                <span class="dropdown">
+                    <a href ng-if="currentStage.timelineDataEntryMode === timelineDataEntryModes.DATAENTRYFORM || !currentStage.timelineDataEntryMode" class="btn" data-toggle="dropdown" style="color: black; padding: 0px; outline: none"><i class="fa fa-th-list"></i></a>
+                    <a href ng-if="currentStage.timelineDataEntryMode === timelineDataEntryModes.COMPAREPREVIOUSDATAENTRYFORM" class="btn" data-toggle="dropdown" style="color: black; padding: 0px; outline: none"><i class="fa fa-file-o"></i></a>
+                    <a href ng-if="currentStage.timelineDataEntryMode === timelineDataEntryModes.COMPAREALLDATAENTRYFORM" class="btn" data-toggle="dropdown" style="color: black; padding: 0px; outline: none"><i class="fa fa-files-o"></i></a>
+                    <a href ng-if="currentStage.timelineDataEntryMode === timelineDataEntryModes.TABLEDATAENTRYFORM && tableEditMode === tableEditModes.table" class="btn" data-toggle="dropdown" style="color: black; padding: 0px; outline: none"><i class="fa fa fa-table"></i></a>
+                    <a href ng-if="currentStage.timelineDataEntryMode === timelineDataEntryModes.TABLEDATAENTRYFORM && tableEditMode === tableEditModes.form" class="btn" data-toggle="dropdown" style="color: black; padding: 0px; outline: none"><i class="fa fa-window-maximize"></i></a>
+                    <ul class="dropdown-menu" style="margin: 0 0 0 -100px;" ng-hide="lockedList[selectedProgramId]">
+                        <li><a href ng-click="toggleForm('DEFAULT')" ng-attr-title="{{'switch_default_form'| translate}}" class="small-horizontal-spacing"><i class="fa fa-th-list"></i> {{'default_form' | translate}}</a></li>
+                        <li><a href ng-click="toggleForm('COMPPRE')" ng-attr-title="{{'switch_compare_form'| translate}}" class="small-horizontal-spacing"><i class="fa fa-file-o"></i> {{'compare_form_previous' | translate}}</a></li>
+                        <li><a href ng-click="toggleForm('COMPALL')" ng-attr-title="{{'switch_compare_form'| translate}}" class="small-horizontal-spacing"><i class="fa fa-files-o"></i> {{'compare_form_all' | translate}}</a></li>
+                        <li><a href ng-click="toggleForm('GRID')" ng-attr-title="{{'switch_tabel_form'| translate}}" class="small-horizontal-spacing" ng-hide="currentStage.programStageDataElements.length > 10"><i class="fa fa-table"></i> {{'grid_form' | translate}}</a></li>
+                        <li><a href ng-click="toggleForm('POP')" ng-attr-title="{{'switch_tabel_form'| translate}}" class="small-horizontal-spacing" ng-hide="currentStage.programStageDataElements.length > 10"><i class="fa fa-window-maximize"></i> {{'pop_over_form' | translate}}</a></li>
+                    </ul>
+                </span>
+
+                <d2-audit name-id-map="prStDes" event-id="{{currentEvent.event}}" data-type="dataElement" ng-if="currentEvent.event"></d2-audit>
+                <a class="small-horizontal-spacing" href ng-click="expandCollapse(dataentryWidget)">
+                    <span ng-show="dataentryWidget.expand"><i class="fa fa-chevron-up vertical-center" ng-attr-title="{{collapseLabel}}"></i></span>
+                    <span ng-show="!dataentryWidget.expand"><i class="fa fa-chevron-down vertical-center" ng-attr-title="{{expandLabel}}"></i></span>
+                </a>
+                <a ng-show="userAuthority.canAdministerDashboard || !lockedList[selectedProgram.id]" class="small-horizontal-spacing" href ng-click="removeWidget(dataentryWidget)" ng-attr-title="{{removeLabel}}"><i class="fa fa-times-circle vertical-center"></i></a>
+            </span>
+        </div>
+        <div ng-if="mainMenuStageSelected()">            
+            {{headerCurrentStageName()}}
+            
+            <span class="pull-right widget-link">  
+                <span ng-repeat="stage in headerStagesWithoutCurrent()" ng-if='useMenuMultiMode'>
+                    <span ng-if="$index !== 0"> | </span>
+                    <a href ng-click="openStageFromMenu(stage, stage.id)">
+                        {{stage.displayName}} ({{getStageEventCnt(stage)}})
+                    </a>
+                </span>
+                <a href ng-click="model.showLegend = !model.showLegend" ng-attr-title="{{'event_color_legend'| translate}}" class="small-horizontal-spacing" ng-if="allEventsSorted.length > 0"><i class="fa fa-info-circle vertical-center"></i></a>
+                <a class="small-horizontal-spacing" href ng-click="expandCollapse(dataentryWidget)">
+                    <span ng-show="dataentryWidget.expand"><i class="fa fa-chevron-up vertical-center" ng-attr-title="{{collapseLabel}}"></i></span>
+                    <span ng-show="!dataentryWidget.expand"><i class="fa fa-chevron-down vertical-center" ng-attr-title="{{expandLabel}}"></i></span>
+                </a>
+                <a ng-show="userAuthority.canAdministerDashboard || !lockedList[selectedProgram.id]" class="small-horizontal-spacing" href ng-click="removeWidget(dataentryWidget)" ng-attr-title="{{removeLabel}}" ng-if="dataentryWidget.showHideAllowed"><i class="fa fa-times-circle vertical-center"></i></a>            
+            </span>
+        </div>       
+    </div>
+
+    <div ng-show="dataentryWidget.expand" class="panel-body dashboard-widget-container">        
+        <div ng-if="showSelf">
+            <div>
+                <div ng-if="model.showLegend">
+                    <div ng-include="'components/dataentry/event-legend.html'"></div>
+                </div>
+                <div ng-if="useMainMenu && !mainMenuStageSelected() && eventsLoaded">
+                    <div class="">
+                        <div ng-repeat="mainMenuStage in mainMenuStages" class="main-menu-item-container" ng-class="getMainMenuItemStyle(mainMenuStage)" ng-click="openStageFromMenu(mainMenuStage)">                            
+                            <div class="main-menu-item">{{mainMenuStage.displayName}} ({{getStageEventCnt(mainMenuStage)}})</div>  
+                            <div class="main-menu-item-footer">{{getStageStyleLabel(mainMenuStage)}}</div>
+                        </div>
+                    </div>                
+                </div>
+                <div ng-if="!useMainMenu || mainMenuStageSelected()">                    
+                    <div class="hideInPrint" ng-if="selectedEnrollment && selectedEnrollment.enrollment">
+                        <div ng-include="'components/dataentry/event-layout.html'"></div>
+                    </div>
+                    <div ng-if="!selectedEnrollment || !selectedEnrollment.enrollment" class="alert alert-danger">{{notEnrolledLabel}}</div>
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <div ng-include="'components/dataentry/main-dataentry-form.html'"></div>
+                        </div>
+                    </div>
+                    <div ng-if="displayCustomForm !== 'TABLE'">
+                        <div class="long-vertical-spacing" ng-include="'components/dataentry/dataentry-notes.html'"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div ng-if="!showSelf">
+            <div class="alert alert-warning">{{'no_active_enrollment'| translate}}</div>
+        </div>        
+    </div>    
+</div>
